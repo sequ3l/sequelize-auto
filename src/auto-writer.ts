@@ -25,6 +25,15 @@ export class AutoWriter {
     useDefine?: boolean;
     spaces?: boolean;
     indentation?: number;
+    es5?: {
+      sequelizeAlias?: string;
+      connectionAlias?: string;
+      modelAlias?: string;
+      initPath: string;
+      moduleExports?: string;
+      importSequelize?: boolean;
+      ignoreWriterImports?: boolean;
+    }
   };
   constructor(tableData: TableData, options: AutoOptions) {
     this.tableText = tableData.text as { [name: string]: string };
@@ -41,6 +50,11 @@ export class AutoWriter {
     }
 
     mkdirp.sync(path.resolve(this.options.directory || "./models"));
+
+    if (this.options.es5?.initPath) {
+      this.options.es5!.initPath = path.join(this.options.directory, this.options.es5!.initPath);
+      mkdirp.sync(this.options.es5!.initPath);
+    }
 
     const tables = _.keys(this.tableText);
 
@@ -62,7 +76,11 @@ export class AutoWriter {
     // write the init-models file
     if (!this.options.noInitModels) {
       const initString = this.createInitString(tableNames, assoc, this.options.lang);
-      const initFilePath = path.join(this.options.directory, "init-models" + (isTypeScript ? '.ts' : '.js'));
+
+      const initFilePath = !this.options.es5?.initPath
+        ? path.join(this.options.directory, "init-models" + (isTypeScript ? '.ts' : '.js'))
+        : path.join(this.options.es5!.initPath, "initialize" + (isTypeScript ? '.ts' : '.js'))
+
       const writeFile = util.promisify(fs.writeFile);
       const initPromise = writeFile(path.resolve(initFilePath), initString);
       promises.push(initPromise);
@@ -77,7 +95,7 @@ export class AutoWriter {
       case 'esm':
         return this.createESMInitString(tableNames, assoc);
       case 'es6':
-          return this.createES5InitString(tableNames, assoc, "const");
+        return this.createES5InitString(tableNames, assoc, "const");
       default:
         return this.createES5InitString(tableNames, assoc, "var");
     }
@@ -99,23 +117,33 @@ export class AutoWriter {
     let strBelongs = "";
     let strBelongsToMany = "";
     const sp = this.space[1];
+    const dot = '.';
 
     const rels = this.relations;
     rels.forEach(rel => {
       if (rel.isM2M) {
         const asprop = recase(this.options.caseProp, pluralize(rel.childProp));
-        strBelongsToMany += `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
+
+        strBelongsToMany += !this.options.es5?.modelAlias
+          ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
+          : `${this.options.es5?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.es5?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
         // const bAlias = (this.options.noAlias && rel.parentModel.toLowerCase() === rel.parentProp.toLowerCase()) ? '' : `as: "${rel.parentProp}", `;
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
         const bAlias = this.options.noAlias ? '' : `as: "${asParentProp}", `;
-        strBelongs += `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`;
+
+        strBelongs += !this.options.es5?.modelAlias
+          ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
+          : `${this.options.es5?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.es5?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`;
 
         const hasRel = rel.isOne ? "hasOne" : "hasMany";
         // const hAlias = (this.options.noAlias && Utils.pluralize(rel.childModel.toLowerCase()) === rel.childProp.toLowerCase()) ? '' : `as: "${rel.childProp}", `;
         const asChildProp = recase(this.options.caseProp, rel.childProp);
         const hAlias = this.options.noAlias ? '' : `as: "${asChildProp}", `;
-        strBelongs += `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`;
+
+        strBelongs += !this.options.es5?.modelAlias
+          ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
+          : `${this.options.es5?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`;
       }
     });
 
@@ -173,7 +201,12 @@ export class AutoWriter {
 
   // create the ES5 init-models file to load all the models into Sequelize
   private createES5InitString(tables: string[], assoc: string, vardef: string) {
-    let str = `${vardef} DataTypes = require("sequelize").DataTypes;\n`;
+    let str = ''
+
+    str = !this.options.es5?.ignoreWriterImports
+      ? `${vardef} DataTypes = require("sequelize").DataTypes;\n`
+      : '';
+
     const sp = this.space[1];
     const modelNames: string[] = [];
     // import statements
@@ -181,28 +214,47 @@ export class AutoWriter {
       const fileName = recase(this.options.caseFile, t, this.options.singularize);
       const modelName = makeTableName(this.options.caseModel, t, this.options.singularize, this.options.lang);
       modelNames.push(modelName);
-      str += `${vardef} _${modelName} = require("./${fileName}");\n`;
+
+      str += !this.options.es5?.ignoreWriterImports
+        ? `${vardef} _${modelName} = require("./${fileName}");\n`
+        : '';
     });
 
-    // create the initialization function
-    str += '\nfunction initModels(sequelize) {\n';
-    modelNames.forEach(m => {
-      str += `${sp}${vardef} ${m} = _${m}(sequelize, DataTypes);\n`;
-    });
+    if (this.options.es5?.moduleExports) {
+      // create the initialization function
+      str += `module.exports = (${this.options.es5.moduleExports}) => {\n`;
+      str += `return async () => {`;
+    }
+    else {
+      // create the initialization function
+      str += '\nfunction initModels(sequelize) {\n';
+      modelNames.forEach(m => {
+        str += `${sp}${vardef} ${m} = _${m}(sequelize, DataTypes);\n`;
+      });
+    }
 
     // add the asociations
     str += "\n" + assoc;
 
-    // return the models
-    str += `\n${sp}return {\n`;
-    modelNames.forEach(m => {
-      str += `${this.space[2]}${m},\n`;
-    });
-    str += `${sp}};\n`;
-    str += '}\n';
-    str += 'module.exports = initModels;\n';
-    str += 'module.exports.initModels = initModels;\n';
-    str += 'module.exports.default = initModels;\n';
+
+    if (!this.options.es5?.ignoreWriterImports) {
+      // return the models
+      str += `\n${sp}return {\n`;
+      modelNames.forEach(m => {
+        str += `${this.space[2]}${m},\n`;
+      });
+      str += `${sp}};\n`;
+      str += '}\n';
+      str += 'module.exports = initModels;\n';
+      str += 'module.exports.initModels = initModels;\n';
+      str += 'module.exports.default = initModels;\n';
+    }
+    else {
+      str += `${sp}};\n`;
+      str += '}\n';
+      //!this.options.es5?.ignoreWriterImports
+    }
+
     return str;
   }
 

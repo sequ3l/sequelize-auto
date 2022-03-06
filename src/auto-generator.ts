@@ -28,8 +28,11 @@ export class AutoGenerator {
     es5?: {
       sequelizeAlias?: string;
       connectionAlias?: string;
+      modelAlias?: string;
+      initPath: string;
       moduleExports?: string;
       importSequelize?: boolean;
+      ignoreWriterImports?: boolean;
     }
   };
 
