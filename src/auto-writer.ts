@@ -126,7 +126,7 @@ export class AutoWriter {
 
         strBelongsToMany += !this.options.es5?.modelAlias
           ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
-          : `${this.options.es5?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.es5?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
+          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.es5?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
         // const bAlias = (this.options.noAlias && rel.parentModel.toLowerCase() === rel.parentProp.toLowerCase()) ? '' : `as: "${rel.parentProp}", `;
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
@@ -134,7 +134,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.es5?.modelAlias
           ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
-          : `${this.options.es5?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.es5?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`;
+          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.es5?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
 
         const hasRel = rel.isOne ? "hasOne" : "hasMany";
         // const hAlias = (this.options.noAlias && Utils.pluralize(rel.childModel.toLowerCase()) === rel.childProp.toLowerCase()) ? '' : `as: "${rel.childProp}", `;
@@ -143,7 +143,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.es5?.modelAlias
           ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
-          : `${this.options.es5?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`;
+          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
       }
     });
 
@@ -223,7 +223,7 @@ export class AutoWriter {
     if (this.options.es5?.moduleExports) {
       // create the initialization function
       str += `module.exports = (${this.options.es5.moduleExports}) => {\n`;
-      str += `return async () => {`;
+      str += `\treturn async () => {`;
     }
     else {
       // create the initialization function
@@ -250,7 +250,7 @@ export class AutoWriter {
       str += 'module.exports.default = initModels;\n';
     }
     else {
-      str += `${sp}};\n`;
+      str += `\t};\n`;
       str += '}\n';
       //!this.options.es5?.ignoreWriterImports
     }
