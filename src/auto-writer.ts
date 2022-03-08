@@ -25,7 +25,7 @@ export class AutoWriter {
     useDefine?: boolean;
     spaces?: boolean;
     indentation?: number;
-    es5?: {
+    firestrap?: {
       sequelizeAlias?: string;
       connectionAlias?: string;
       modelAlias?: string;
@@ -51,9 +51,9 @@ export class AutoWriter {
 
     mkdirp.sync(path.resolve(this.options.directory || "./models"));
 
-    if (this.options.es5?.initPath) {
-      this.options.es5!.initPath = path.join(this.options.directory, this.options.es5!.initPath);
-      mkdirp.sync(this.options.es5!.initPath);
+    if (this.options.firestrap?.initPath) {
+      this.options.firestrap!.initPath = path.join(this.options.directory, this.options.firestrap!.initPath);
+      mkdirp.sync(this.options.firestrap!.initPath);
     }
 
     const tables = _.keys(this.tableText);
@@ -77,9 +77,9 @@ export class AutoWriter {
     if (!this.options.noInitModels) {
       const initString = this.createInitString(tableNames, assoc, this.options.lang);
 
-      const initFilePath = !this.options.es5?.initPath
+      const initFilePath = !this.options.firestrap?.initPath
         ? path.join(this.options.directory, "init-models" + (isTypeScript ? '.ts' : '.js'))
-        : path.join(this.options.es5!.initPath, "initialize" + (isTypeScript ? '.ts' : '.js'))
+        : path.join(this.options.firestrap!.initPath, "initialize" + (isTypeScript ? '.ts' : '.js'))
 
       const writeFile = util.promisify(fs.writeFile);
       const initPromise = writeFile(path.resolve(initFilePath), initString);
@@ -124,26 +124,26 @@ export class AutoWriter {
       if (rel.isM2M) {
         const asprop = recase(this.options.caseProp, pluralize(rel.childProp));
 
-        strBelongsToMany += !this.options.es5?.modelAlias
+        strBelongsToMany += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
-          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.es5?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
+          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.firestrap?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.firestrap?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
         // const bAlias = (this.options.noAlias && rel.parentModel.toLowerCase() === rel.parentProp.toLowerCase()) ? '' : `as: "${rel.parentProp}", `;
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
         const bAlias = this.options.noAlias ? '' : `as: "${asParentProp}", `;
 
-        strBelongs += !this.options.es5?.modelAlias
+        strBelongs += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.es5?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
 
         const hasRel = rel.isOne ? "hasOne" : "hasMany";
         // const hAlias = (this.options.noAlias && Utils.pluralize(rel.childModel.toLowerCase()) === rel.childProp.toLowerCase()) ? '' : `as: "${rel.childProp}", `;
         const asChildProp = recase(this.options.caseProp, rel.childProp);
         const hAlias = this.options.noAlias ? '' : `as: "${asChildProp}", `;
 
-        strBelongs += !this.options.es5?.modelAlias
+        strBelongs += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\t${this.options.es5?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.es5?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.firestrap?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
       }
     });
 
@@ -203,7 +203,7 @@ export class AutoWriter {
   private createES5InitString(tables: string[], assoc: string, vardef: string) {
     let str = ''
 
-    str = !this.options.es5?.ignoreWriterImports
+    str = !this.options.firestrap?.ignoreWriterImports
       ? `${vardef} DataTypes = require("sequelize").DataTypes;\n`
       : '';
 
@@ -215,14 +215,14 @@ export class AutoWriter {
       const modelName = makeTableName(this.options.caseModel, t, this.options.singularize, this.options.lang);
       modelNames.push(modelName);
 
-      str += !this.options.es5?.ignoreWriterImports
+      str += !this.options.firestrap?.ignoreWriterImports
         ? `${vardef} _${modelName} = require("./${fileName}");\n`
         : '';
     });
 
-    if (this.options.es5?.moduleExports) {
+    if (this.options.firestrap?.moduleExports) {
       // create the initialization function
-      str += `module.exports = (${this.options.es5.moduleExports}) => {\n`;
+      str += `module.exports = (${this.options.firestrap.moduleExports}) => {\n`;
       str += `\treturn async () => {`;
     }
     else {
@@ -237,7 +237,7 @@ export class AutoWriter {
     str += "\n" + assoc;
 
 
-    if (!this.options.es5?.ignoreWriterImports) {
+    if (!this.options.firestrap?.ignoreWriterImports) {
       // return the models
       str += `\n${sp}return {\n`;
       modelNames.forEach(m => {
@@ -252,7 +252,7 @@ export class AutoWriter {
     else {
       str += `\t};\n`;
       str += '}\n';
-      //!this.options.es5?.ignoreWriterImports
+      //!this.options.firestrap?.ignoreWriterImports
     }
 
     return str;
