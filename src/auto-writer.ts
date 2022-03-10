@@ -126,7 +126,7 @@ export class AutoWriter {
 
         strBelongsToMany += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
-          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}.belongsToMany(${this.options.firestrap?.modelAlias}${dot}${rel.childModel}, { as: '${asprop}', through: ${this.options.firestrap?.modelAlias}${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
+          : `\t\tthis.#data.${dot}${rel.parentModel}.belongsToMany(this.#data.${dot}${rel.childModel}, { as: '${asprop}', through: this.#data.${dot}${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
         // const bAlias = (this.options.noAlias && rel.parentModel.toLowerCase() === rel.parentProp.toLowerCase()) ? '' : `as: "${rel.parentProp}", `;
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
@@ -134,7 +134,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.childModel}.belongsTo(${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\tthis.#data.${dot}${rel.childModel}.belongsTo(this.#data.${dot}${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
 
         const hasRel = rel.isOne ? "hasOne" : "hasMany";
         // const hAlias = (this.options.noAlias && Utils.pluralize(rel.childModel.toLowerCase()) === rel.childProp.toLowerCase()) ? '' : `as: "${rel.childProp}", `;
@@ -143,7 +143,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.firestrap?.modelAlias
           ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\t${this.options.firestrap?.modelAlias}${dot}${rel.parentModel}.${hasRel}(${this.options.firestrap?.modelAlias}${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\tthis.#data.${dot}${rel.parentModel}.${hasRel}(this.#data.${dot}${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
       }
     });
 
@@ -222,8 +222,9 @@ export class AutoWriter {
 
     if (this.options.firestrap?.moduleExports) {
       // create the initialization function
-      str += `module.exports = (${this.options.firestrap.moduleExports}) => {\n`;
-      str += `\treturn async () => {`;
+      str += `module.exports = (${this.options.firestrap.moduleExports}) => class initialize {\n`;
+      str += `\tstatic #data = ${this.options.firestrap?.modelAlias}\n\n`;
+      str += `\tstatic async spark() => {`;
     }
     else {
       // create the initialization function
