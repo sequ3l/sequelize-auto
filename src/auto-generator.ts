@@ -25,7 +25,7 @@ export class AutoGenerator {
     singularize: boolean;
     useDefine: boolean;
     noIndexes?: boolean;
-    firestrap?: {
+    cjsConfiguration?: {
       sequelizeAlias?: string;
       connectionAlias?: string;
       modelAlias?: string;
@@ -78,15 +78,15 @@ export class AutoGenerator {
         header += sp + "return super.init({\n";
       }
     } else {
-      header += this.options.firestrap?.importSequelize ?? true
+      header += this.options.cjsConfiguration?.importSequelize ?? true
         ? "const Sequelize = require('sequelize');\n"
         : '';
 
-      header += !this.options.firestrap?.moduleExports
+      header += !this.options.cjsConfiguration?.moduleExports
         ? `module.exports = function(sequelize, DataTypes) {\n`
-        : `module.exports = (${this.options.firestrap?.moduleExports}) => {\n`;
+        : `module.exports = (${this.options.cjsConfiguration?.moduleExports}) => {\n`;
 
-      header += sp + `return () => ${this.options.firestrap?.connectionAlias ?? 'sequelize'}.define('#TABLE#', {\n`;
+      header += sp + `return () => ${this.options.cjsConfiguration?.connectionAlias ?? 'sequelize'}.define('#TABLE#', {\n`;
     }
 
     return header;
@@ -374,16 +374,16 @@ export class AutoGenerator {
             val_text = defaultVal;
 
           } else if (field_type === 'uuid' && (defaultVal === 'gen_random_uuid()' || defaultVal === 'uuid_generate_v4()')) {
-            val_text = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.UUIDV` : "DataTypes.UUIDV4";
+            val_text = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.UUIDV` : "DataTypes.UUIDV4";
 
           } else if (defaultVal.match(/\w+\(\)$/)) {
             // replace db function with sequelize function
-            val_text = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.fn('` + defaultVal.replace(/\(\)$/g, "") + "')" : "Sequelize.Sequelize.fn('" + defaultVal.replace(/\(\)$/g, "") + "')";
+            val_text = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.fn('` + defaultVal.replace(/\(\)$/g, "") + "')" : "Sequelize.Sequelize.fn('" + defaultVal.replace(/\(\)$/g, "") + "')";
 
           } else if (this.isNumber(field_type)) {
             if (defaultVal.match(/\(\)/g)) {
               // assume it's a server function if it contains parens
-              val_text = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
+              val_text = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
             } else {
               // don't quote numbers
               val_text = defaultVal;
@@ -391,11 +391,11 @@ export class AutoGenerator {
 
           } else if (defaultVal.match(/\(\)/g)) {
             // embedded function, pass as literal
-            val_text = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
+            val_text = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
 
           } else if (field_type.indexOf('date') === 0 || field_type.indexOf('timestamp') === 0) {
             if (_.includes(['current_timestamp', 'current_date', 'current_time', 'localtime', 'localtimestamp'], defaultVal.toLowerCase())) {
-              val_text = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
+              val_text = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.Sequelize.literal('` + defaultVal + "')" : "Sequelize.Sequelize.literal('" + defaultVal + "')";
             } else {
               val_text = quoteWrapper + defaultVal + quoteWrapper;
             }
@@ -499,23 +499,23 @@ export class AutoGenerator {
     let typematch = null;
 
     if (type === "boolean" || type === "bit(1)" || type === "bit" || type === "tinyint(1)") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.BOOLEAN` : 'DataTypes.BOOLEAN';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.BOOLEAN` : 'DataTypes.BOOLEAN';
 
       // postgres range types
     } else if (type === "numrange") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DECIMAL)` : 'DataTypes.RANGE(DataTypes.DECIMAL)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DECIMAL)` : 'DataTypes.RANGE(DataTypes.DECIMAL)';
     } else if (type === "int4range") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.RANGE(DataTypes.INTEGER)` : 'DataTypes.RANGE(DataTypes.INTEGER)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.RANGE(DataTypes.INTEGER)` : 'DataTypes.RANGE(DataTypes.INTEGER)';
     } else if (type === "int8range") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.RANGE(DataTypes.BIGINT)` : 'DataTypes.RANGE(DataTypes.BIGINT)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.RANGE(DataTypes.BIGINT)` : 'DataTypes.RANGE(DataTypes.BIGINT)';
     } else if (type === "daterange") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DATEONLY)` : 'DataTypes.RANGE(DataTypes.DATEONLY)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DATEONLY)` : 'DataTypes.RANGE(DataTypes.DATEONLY)';
     } else if (type === "tsrange" || type === "tstzrange") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DATE)` : 'DataTypes.RANGE(DataTypes.DATE)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.RANGE(DataTypes.DATE)` : 'DataTypes.RANGE(DataTypes.DATE)';
 
     } else if (typematch = type.match(/^(bigint|smallint|mediumint|tinyint|int)/)) {
       // integer subtypes
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.` + (typematch[0] === 'int' ? 'INTEGER' : typematch[0].toUpperCase()) : 'DataTypes.' + (typematch[0] === 'int' ? 'INTEGER' : typematch[0].toUpperCase());
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.` + (typematch[0] === 'int' ? 'INTEGER' : typematch[0].toUpperCase()) : 'DataTypes.' + (typematch[0] === 'int' ? 'INTEGER' : typematch[0].toUpperCase());
       if (/unsigned/i.test(type)) {
         val += '.UNSIGNED';
       }
@@ -523,61 +523,61 @@ export class AutoGenerator {
         val += '.ZEROFILL';
       }
     } else if (type === 'nvarchar(max)' || type === 'varchar(max)') {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.TEXT` : 'DataTypes.TEXT';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.TEXT` : 'DataTypes.TEXT';
     } else if (type.match(/n?varchar|string|varying/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.STRING` + (!_.isNull(length) ? length : '') : 'DataTypes.STRING' + (!_.isNull(length) ? length : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.STRING` + (!_.isNull(length) ? length : '') : 'DataTypes.STRING' + (!_.isNull(length) ? length : '');
     } else if (type.match(/^n?char/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.CHAR` + (!_.isNull(length) ? length : '') : 'DataTypes.CHAR' + (!_.isNull(length) ? length : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.CHAR` + (!_.isNull(length) ? length : '') : 'DataTypes.CHAR' + (!_.isNull(length) ? length : '');
     } else if (type.match(/^real/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.REAL` : 'DataTypes.REAL';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.REAL` : 'DataTypes.REAL';
     } else if (type.match(/text$/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.TEXT` + (!_.isNull(length) ? length : '') : 'DataTypes.TEXT' + (!_.isNull(length) ? length : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.TEXT` + (!_.isNull(length) ? length : '') : 'DataTypes.TEXT' + (!_.isNull(length) ? length : '');
     } else if (type === "date") {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.DATEONLY` : 'DataTypes.DATEONLY';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.DATEONLY` : 'DataTypes.DATEONLY';
     } else if (type.match(/^(date|timestamp|year)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.DATE` + (!_.isNull(length) ? length : '') : 'DataTypes.DATE' + (!_.isNull(length) ? length : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.DATE` + (!_.isNull(length) ? length : '') : 'DataTypes.DATE' + (!_.isNull(length) ? length : '');
     } else if (type.match(/^(time)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.TIME` : 'DataTypes.TIME';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.TIME` : 'DataTypes.TIME';
     } else if (type.match(/^(float|float4)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.FLOAT` + (!_.isNull(precision) ? precision : '') : 'DataTypes.FLOAT' + (!_.isNull(precision) ? precision : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.FLOAT` + (!_.isNull(precision) ? precision : '') : 'DataTypes.FLOAT' + (!_.isNull(precision) ? precision : '');
     } else if (type.match(/^(decimal|numeric)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.DECIMAL` + (!_.isNull(precision) ? precision : '') : 'DataTypes.DECIMAL' + (!_.isNull(precision) ? precision : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.DECIMAL` + (!_.isNull(precision) ? precision : '') : 'DataTypes.DECIMAL' + (!_.isNull(precision) ? precision : '');
     } else if (type.match(/^money/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.DECIMAL(19,4)` : 'DataTypes.DECIMAL(19,4)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.DECIMAL(19,4)` : 'DataTypes.DECIMAL(19,4)';
     } else if (type.match(/^smallmoney/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes..DECIMAL(10,4)` : 'DataTypes.DECIMAL(10,4)';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes..DECIMAL(10,4)` : 'DataTypes.DECIMAL(10,4)';
     } else if (type.match(/^(float8|double)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.DOUBLE` + (!_.isNull(precision) ? precision : '') : 'DataTypes.DOUBLE' + (!_.isNull(precision) ? precision : '');
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.DOUBLE` + (!_.isNull(precision) ? precision : '') : 'DataTypes.DOUBLE' + (!_.isNull(precision) ? precision : '');
     } else if (type.match(/^uuid|uniqueidentifier/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.UUID` : 'DataTypes.UUID';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.UUID` : 'DataTypes.UUID';
     } else if (type.match(/^jsonb/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.JSONB` : 'DataTypes.JSONB';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.JSONB` : 'DataTypes.JSONB';
     } else if (type.match(/^json/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.JSON` : 'DataTypes.JSON';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.JSON` : 'DataTypes.JSON';
     } else if (type.match(/^geometry/)) {
       const gtype = fieldObj.elementType ? `(${fieldObj.elementType})` : '';
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.GEOMETRY${gtype}` : `DataTypes.GEOMETRY${gtype}`;
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.GEOMETRY${gtype}` : `DataTypes.GEOMETRY${gtype}`;
     } else if (type.match(/^geography/)) {
       const gtype = fieldObj.elementType ? `(${fieldObj.elementType})` : '';
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.GEOGRAPHY${gtype}` : `DataTypes.GEOGRAPHY${gtype}`;
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.GEOGRAPHY${gtype}` : `DataTypes.GEOGRAPHY${gtype}`;
     } else if (type.match(/^array/)) {
       const eltype = this.getSqType(fieldObj, "elementType");
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.ARRAY(${eltype})` : `DataTypes.ARRAY(${eltype})`;
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.ARRAY(${eltype})` : `DataTypes.ARRAY(${eltype})`;
     } else if (type.match(/(binary|image|blob|bytea)/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.BLOB` : 'DataTypes.BLOB';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.BLOB` : 'DataTypes.BLOB';
     } else if (type.match(/^hstore/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.HSTORE` : 'DataTypes.HSTORE';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.HSTORE` : 'DataTypes.HSTORE';
     } else if (type.match(/^inet/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.INET` : 'DataTypes.INET';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.INET` : 'DataTypes.INET';
     } else if (type.match(/^cidr/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.CIDR` : 'DataTypes.CIDR';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.CIDR` : 'DataTypes.CIDR';
     } else if (type.match(/^oid/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.INTEGER` : 'DataTypes.INTEGER';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.INTEGER` : 'DataTypes.INTEGER';
     } else if (type.match(/^macaddr/)) {
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.MACADDR` : 'DataTypes.MACADDR';
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.MACADDR` : 'DataTypes.MACADDR';
     } else if (type.match(/^enum(\(.*\))?$/)) {
       const enumValues = this.getEnumValues(fieldObj);
-      val = this.options.firestrap?.sequelizeAlias ? `${this.options.firestrap?.sequelizeAlias}.DataTypes.ENUM(${enumValues}` : `DataTypes.ENUM(${enumValues})`;
+      val = this.options.cjsConfiguration?.sequelizeAlias ? `${this.options.cjsConfiguration?.sequelizeAlias}.DataTypes.ENUM(${enumValues}` : `DataTypes.ENUM(${enumValues})`;
     }
 
     return val as string;

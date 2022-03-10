@@ -25,7 +25,7 @@ export class AutoWriter {
     useDefine?: boolean;
     spaces?: boolean;
     indentation?: number;
-    firestrap?: {
+    cjsConfiguration?: {
       sequelizeAlias?: string;
       connectionAlias?: string;
       modelAlias?: string;
@@ -51,9 +51,9 @@ export class AutoWriter {
 
     mkdirp.sync(path.resolve(this.options.directory || "./models"));
 
-    if (this.options.firestrap?.initPath) {
-      this.options.firestrap!.initPath = path.join(this.options.directory, this.options.firestrap!.initPath);
-      mkdirp.sync(this.options.firestrap!.initPath);
+    if (this.options.cjsConfiguration?.initPath) {
+      this.options.cjsConfiguration!.initPath = path.join(this.options.directory, this.options.cjsConfiguration!.initPath);
+      mkdirp.sync(this.options.cjsConfiguration!.initPath);
     }
 
     const tables = _.keys(this.tableText);
@@ -77,9 +77,9 @@ export class AutoWriter {
     if (!this.options.noInitModels) {
       const initString = this.createInitString(tableNames, assoc, this.options.lang);
 
-      const initFilePath = !this.options.firestrap?.initPath
+      const initFilePath = !this.options.cjsConfiguration?.initPath
         ? path.join(this.options.directory, "init-models" + (isTypeScript ? '.ts' : '.js'))
-        : path.join(this.options.firestrap!.initPath, "initialize" + (isTypeScript ? '.ts' : '.js'))
+        : path.join(this.options.cjsConfiguration!.initPath, "initialize" + (isTypeScript ? '.ts' : '.js'))
 
       const writeFile = util.promisify(fs.writeFile);
       const initPromise = writeFile(path.resolve(initFilePath), initString);
@@ -124,7 +124,7 @@ export class AutoWriter {
       if (rel.isM2M) {
         const asprop = recase(this.options.caseProp, pluralize(rel.childProp));
 
-        strBelongsToMany += !this.options.firestrap?.modelAlias
+        strBelongsToMany += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
           : `\t\tthis.#data.${rel.parentModel}.belongsToMany(this.#data.${rel.childModel}, { as: '${asprop}', through: this.#data.${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
@@ -132,7 +132,7 @@ export class AutoWriter {
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
         const bAlias = this.options.noAlias ? '' : `as: "${asParentProp}", `;
 
-        strBelongs += !this.options.firestrap?.modelAlias
+        strBelongs += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
           : `\t\tthis.#data.${rel.childModel}.belongsTo(this.#data.${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
 
@@ -141,7 +141,7 @@ export class AutoWriter {
         const asChildProp = recase(this.options.caseProp, rel.childProp);
         const hAlias = this.options.noAlias ? '' : `as: "${asChildProp}", `;
 
-        strBelongs += !this.options.firestrap?.modelAlias
+        strBelongs += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
           : `\t\tthis.#data.${rel.parentModel}.${hasRel}(this.#data.${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
       }
@@ -203,7 +203,7 @@ export class AutoWriter {
   private createES5InitString(tables: string[], assoc: string, vardef: string) {
     let str = ''
 
-    str = !this.options.firestrap?.ignoreWriterImports
+    str = !this.options.cjsConfiguration?.ignoreWriterImports
       ? `${vardef} DataTypes = require("sequelize").DataTypes;\n`
       : '';
 
@@ -215,15 +215,15 @@ export class AutoWriter {
       const modelName = makeTableName(this.options.caseModel, t, this.options.singularize, this.options.lang);
       modelNames.push(modelName);
 
-      str += !this.options.firestrap?.ignoreWriterImports
+      str += !this.options.cjsConfiguration?.ignoreWriterImports
         ? `${vardef} _${modelName} = require("./${fileName}");\n`
         : '';
     });
 
-    if (this.options.firestrap?.moduleExports) {
+    if (this.options.cjsConfiguration?.moduleExports) {
       // create the initialization function
-      str += `module.exports = (${this.options.firestrap.moduleExports}) => class initialize {\n`;
-      str += `\tstatic #data = ${this.options.firestrap?.modelAlias}\n\n`;
+      str += `module.exports = (${this.options.cjsConfiguration.moduleExports}) => class initialize {\n`;
+      str += `\tstatic #data = ${this.options.cjsConfiguration?.modelAlias}\n\n`;
       str += `\tstatic async spark() {`;
     }
     else {
@@ -238,7 +238,7 @@ export class AutoWriter {
     str += "\n" + assoc;
 
 
-    if (!this.options.firestrap?.ignoreWriterImports) {
+    if (!this.options.cjsConfiguration?.ignoreWriterImports) {
       // return the models
       str += `\n${sp}return {\n`;
       modelNames.forEach(m => {
@@ -253,7 +253,7 @@ export class AutoWriter {
     else {
       str += `\t};\n`;
       str += '}\n';
-      //!this.options.firestrap?.ignoreWriterImports
+      //!this.options.cjsConfiguration?.ignoreWriterImports
     }
 
     return str;
