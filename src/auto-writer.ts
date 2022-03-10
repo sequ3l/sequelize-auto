@@ -224,7 +224,7 @@ export class AutoWriter {
       // create the initialization function
       str += `module.exports = (${this.options.firestrap.moduleExports}) => class initialize {\n`;
       str += `\tstatic #data = ${this.options.firestrap?.modelAlias}\n\n`;
-      str += `\tstatic async spark() => {`;
+      str += `\tstatic async spark() {`;
     }
     else {
       // create the initialization function
