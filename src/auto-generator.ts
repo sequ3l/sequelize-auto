@@ -86,7 +86,7 @@ export class AutoGenerator {
         ? `module.exports = function(sequelize, DataTypes) {\n`
         : `module.exports = (${this.options.firestrap?.moduleExports}) => class initialize {\n`;
 
-      header += sp + `static #models = {this.options.firestrap?.connectionAlias}\n\nstatic async spark () => ${this.options.firestrap?.connectionAlias ?? 'sequelize'}.define('#TABLE#', {\n`;
+      header += sp + `static #models = ${this.options.firestrap?.connectionAlias}\n\nstatic async spark () => ${this.options.firestrap?.connectionAlias ?? 'sequelize'}.define('#TABLE#', {\n`;
     }
 
     return header;
