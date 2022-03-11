@@ -126,7 +126,7 @@ export class AutoWriter {
 
         strBelongsToMany += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.parentModel}.belongsToMany(${rel.childModel}, { as: '${asprop}', through: ${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`
-          : `\t\tthis.#data.${rel.parentModel}.belongsToMany(this.#data.${rel.childModel}, { as: '${asprop}', through: this.#data.${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
+          : `\t\t${this.options.cjsConfiguration?.modelAlias}.${rel.parentModel}.belongsToMany(${this.options.cjsConfiguration?.modelAlias}.${rel.childModel}, { as: '${asprop}', through: ${this.options.cjsConfiguration?.modelAlias}.${rel.joinModel}, foreignKey: "${rel.parentId}", otherKey: "${rel.childId}" });\n`;
       } else {
         // const bAlias = (this.options.noAlias && rel.parentModel.toLowerCase() === rel.parentProp.toLowerCase()) ? '' : `as: "${rel.parentProp}", `;
         const asParentProp = recase(this.options.caseProp, rel.parentProp);
@@ -134,7 +134,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.childModel}.belongsTo(${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\tthis.#data.${rel.childModel}.belongsTo(this.#data.${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\t${this.options.cjsConfiguration?.modelAlias}.${rel.childModel}.belongsTo(${this.options.cjsConfiguration?.modelAlias}.${rel.parentModel}, { ${bAlias}foreignKey: "${rel.parentId}" });\n`;
 
         const hasRel = rel.isOne ? "hasOne" : "hasMany";
         // const hAlias = (this.options.noAlias && Utils.pluralize(rel.childModel.toLowerCase()) === rel.childProp.toLowerCase()) ? '' : `as: "${rel.childProp}", `;
@@ -143,7 +143,7 @@ export class AutoWriter {
 
         strBelongs += !this.options.cjsConfiguration?.modelAlias
           ? `${sp}${rel.parentModel}.${hasRel}(${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}"});\n`
-          : `\t\tthis.#data.${rel.parentModel}.${hasRel}(this.#data.${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
+          : `\t\t${this.options.cjsConfiguration?.modelAlias}.${rel.parentModel}.${hasRel}(${this.options.cjsConfiguration?.modelAlias}.${rel.childModel}, { ${hAlias}foreignKey: "${rel.parentId}" });\n`;
       }
     });
 
@@ -222,9 +222,12 @@ export class AutoWriter {
 
     if (this.options.cjsConfiguration?.moduleExports) {
       // create the initialization function
-      str += `module.exports = (${this.options.cjsConfiguration.moduleExports}) => class initialize {\n`;
-      str += `\tstatic #data = ${this.options.cjsConfiguration?.modelAlias}\n\n`;
-      str += `\tstatic async spark() {`;
+      //str += `module.exports = (${this.options.cjsConfiguration.moduleExports}) => class initialize {\n`;
+      //str += `\tstatic #data = ${this.options.cjsConfiguration?.modelAlias}\n\n`;
+      //str += `\tstatic async spark() {`;
+
+      str += `module.exports = (${this.options.cjsConfiguration.moduleExports}) => {\n`;
+      str += `\treturn async () {`;
     }
     else {
       // create the initialization function
