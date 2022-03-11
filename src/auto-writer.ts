@@ -227,7 +227,7 @@ export class AutoWriter {
       //str += `\tstatic async spark() {`;
 
       str += `module.exports = (${this.options.cjsConfiguration.moduleExports}) => {\n`;
-      str += `\treturn async () {`;
+      str += `\treturn async () => {`;
     }
     else {
       // create the initialization function
